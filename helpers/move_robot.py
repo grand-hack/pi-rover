@@ -1,6 +1,3 @@
-import sys
-
-sys.path.append("TurboPi")
 import asyncio
 import HiwonderSDK.mecanum as mecanum
 
