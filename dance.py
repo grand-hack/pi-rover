@@ -37,7 +37,7 @@ async def dance_moves():
 
 
 async def camera_moves():
-    await move_camera(["up", "down", "left", "right"])
+    await move_camera(["up", "down", "left", "right", "center"])
 
 
 async def eye_moves():
@@ -57,7 +57,6 @@ async def eye_moves():
 
 
 async def dance():
-    print("IN dance()")
     # Create tasks for parallel execution
     robot_task = asyncio.create_task(dance_moves())
     camera_task = asyncio.create_task(camera_moves())
