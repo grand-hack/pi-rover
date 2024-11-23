@@ -14,6 +14,7 @@ import cv2
 import pyaudio
 import HiwonderSDK.mecanum as mecanum
 from dance import dance
+from helpers.set_eye_color import set_eye_color
 
 VIDEO_FPS = 10
 VIDEO_WIDTH = 640
@@ -199,6 +200,11 @@ class PyAudioApp(EventHandler):
         if cmd == "dance":
             print("DANCE")
             asyncio.run_coroutine_threadsafe(dance())
+
+        if cmd == "set_color":
+            print("SET_COLOR")
+            rgb = tuple(int(x) for x in rest.split()[:3])
+            set_eye_color(rgb, rgb)
 
 
 def main():
