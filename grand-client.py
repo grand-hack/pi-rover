@@ -2,7 +2,8 @@
 # Usage: python3 record_and_play.py -m MEETING_URL
 #
 import sys
-sys.path.append('TurboPi')
+
+sys.path.append("TurboPi")
 import argparse
 import asyncio
 import threading
@@ -12,19 +13,23 @@ from daily import *
 import cv2
 import pyaudio
 import HiwonderSDK.mecanum as mecanum
+from dance import dance
 
 VIDEO_FPS = 10
 VIDEO_WIDTH = 640
 VIDEO_HEIGHT = 480
 SAMPLE_RATE = 48000
 NUM_CHANNELS = 1
-AUDIO_OUT_CHUNKS = 256 # safe number of samples to read/write. restart process if audio is scratchy.
+AUDIO_OUT_CHUNKS = (
+    256  # safe number of samples to read/write. restart process if audio is scratchy.
+)
 
 chassis = mecanum.MecanumChassis()
 
+
 class PyAudioApp(EventHandler):
     def __init__(self, sample_rate, num_channels):
-        self.__app_quit = False        
+        self.__app_quit = False
         self.__sample_rate = sample_rate
         self.__num_channels = num_channels
 
@@ -35,9 +40,9 @@ class PyAudioApp(EventHandler):
         self.__capcam = cv2.VideoCapture(0)
         if not self.__capcam.isOpened():
             raise RuntimeError("Error: Could not open camera")
-        self.__capcam.set(cv2.CAP_PROP_FRAME_WIDTH, VIDEO_WIDTH) 
+        self.__capcam.set(cv2.CAP_PROP_FRAME_WIDTH, VIDEO_WIDTH)
         self.__capcam.set(cv2.CAP_PROP_FRAME_HEIGHT, VIDEO_HEIGHT)
-        
+
         # Start video capture thread
         self.__video_thread = threading.Thread(target=self.capture_video_stream)
         self.__video_thread.daemon = True  # Thread will close when main program exits
@@ -70,8 +75,11 @@ class PyAudioApp(EventHandler):
         )
         self.__output_stream = self.__pyaudio.open(
             output_device_index=0,
-            format=pyaudio.paInt16, channels=num_channels, rate=sample_rate, output=True,
-            frames_per_buffer=AUDIO_OUT_CHUNKS
+            format=pyaudio.paInt16,
+            channels=num_channels,
+            rate=sample_rate,
+            output=True,
+            frames_per_buffer=AUDIO_OUT_CHUNKS,
         )
 
         self.__client = CallClient(self)
@@ -89,20 +97,20 @@ class PyAudioApp(EventHandler):
             self.__app_quit = True
 
     def capture_video_stream(self):
-        frame_delay = 1/VIDEO_FPS
+        frame_delay = 1 / VIDEO_FPS
         frame_count = 0
-        
+
         while not self.__app_quit:
             start_time = time.time()
-            
+
             ret, frame = self.__capcam.read()
             if not ret:
                 print("Error: Can't receive frame")
                 continue
-                
+
             rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             self.__camera.write_frame(rgb_frame.tobytes())
-            frame_count += 1                          
+            frame_count += 1
             while (time.time() - start_time) < frame_delay:
                 time.sleep(0.001)
 
@@ -111,7 +119,10 @@ class PyAudioApp(EventHandler):
             meeting_url,
             client_settings={
                 "inputs": {
-                    "camera": {"isEnabled": True, "settings": {"deviceId": "my-camera"}},
+                    "camera": {
+                        "isEnabled": True,
+                        "settings": {"deviceId": "my-camera"},
+                    },
                     "microphone": {
                         "settings": {
                             "deviceId": "my-mic",
@@ -127,10 +138,12 @@ class PyAudioApp(EventHandler):
                     "microphone": {
                         "isPublishing": True,
                         "sendSettings": {
-                            "channelConfig": "stereo" if self.__num_channels == 2 else "mono",
+                            "channelConfig": "stereo"
+                            if self.__num_channels == 2
+                            else "mono",
                         },
                     },
-                    "camera": { "isPublishing": True }
+                    "camera": {"isPublishing": True},
                 },
             },
             completion=self.on_joined,
@@ -176,12 +189,17 @@ class PyAudioApp(EventHandler):
         if msg and isinstance(msg, str):
             cmd, rest = msg.split(maxsplit=1)
 
-        if cmd == 'move':
+        if cmd == "move":
             velocity, heading, angle, seconds = rest.split()
             print("MOVE:", velocity, heading, angle, seconds)
             chassis.set_velocity(float(velocity), float(heading), float(angle))
             time.sleep(float(seconds))
             chassis.set_velocity(0, 0, 0)
+
+        if cmd == "dance":
+            print("DANCE")
+            asyncio.run_coroutine_threadsafe(dance())
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -189,7 +207,9 @@ def main():
     parser.add_argument(
         "-c", "--channels", type=int, default=NUM_CHANNELS, help="Number of channels"
     )
-    parser.add_argument("-r", "--rate", type=int, default=SAMPLE_RATE, help="Sample rate")
+    parser.add_argument(
+        "-r", "--rate", type=int, default=SAMPLE_RATE, help="Sample rate"
+    )
     args = parser.parse_args()
 
     Daily.init()
@@ -204,7 +224,7 @@ def main():
     except KeyboardInterrupt:
         print("Ctrl-C detected. Exiting!")
     finally:
-        chassis.set_velocity(0,0,0)
+        chassis.set_velocity(0, 0, 0)
         app.leave()
 
 
