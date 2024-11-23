@@ -198,7 +198,7 @@ class PyAudioApp(EventHandler):
         if cmd == "turn":
             direction = rest.split()
             print("TURN:", direction)
-            chassis.set_velocity(0, 0, 0.7)
+            chassis.set_velocity(0, 0, 0.7 if direction == "right" else -0.7)
             time.sleep(0.5)
             chassis.set_velocity(0, 0, 0)
 
