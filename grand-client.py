@@ -34,6 +34,11 @@ class PyAudioApp(EventHandler):
         self.__sample_rate = sample_rate
         self.__num_channels = num_channels
 
+        self.__loop = asyncio.new_event_loop()
+        self.__loop_thread = threading.Thread(target=self.__run_msgs_event_loop)
+        self.__loop_thread.daemon = True
+        self.__loop_thread.start()
+
         # Video capture initialization
         self.__camera = Daily.create_camera_device(
             "my-camera", width=VIDEO_WIDTH, height=VIDEO_HEIGHT, color_format="RGB"
@@ -199,12 +204,16 @@ class PyAudioApp(EventHandler):
 
         if cmd == "dance":
             print("DANCE")
-            asyncio.run_coroutine_threadsafe(dance())
+            future = asyncio.run_coroutine_threadsafe(dance(), self.__loop)
 
         if cmd == "set_color":
             print("SET_COLOR")
             rgb = tuple(int(x) for x in rest.split()[:3])
             set_eye_color(rgb, rgb)
+
+    def __run_msgs_event_loop(self):
+        asyncio.set_event_loop(self.__loop)
+        self.__loop.run_forever()
 
 
 def main():
