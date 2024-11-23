@@ -195,6 +195,13 @@ class PyAudioApp(EventHandler):
         if msg and isinstance(msg, str):
             cmd, rest = msg.split(maxsplit=1)
 
+        if cmd == "turn":
+            direction = rest.split()
+            print("TURN:", direction)
+            chassis.set_velocity(0, 0, 0.7)
+            time.sleep(0.5)
+            chassis.set_velocity(0, 0, 0)
+
         if cmd == "move":
             velocity, heading, angle, seconds = rest.split()
             print("MOVE:", velocity, heading, angle, seconds)
